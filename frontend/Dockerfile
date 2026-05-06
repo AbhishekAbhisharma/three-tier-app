@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.4
 
-FROM node:lts-buster AS development
+FROM node:20 AS development
 
 WORKDIR /usr/src/app
 
