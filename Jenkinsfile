@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         SONAR_HOME = tool "sonar-scanner"
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
     }
 
     stages {
@@ -16,15 +15,20 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
+            environment {
+                SONAR_TOKEN = credentials('sonar-token')
+            }
+
             steps {
                 withSonarQubeEnv('sonarqube') {
-                    sh """
-                    \$SONAR_HOME/bin/sonar-scanner \
+
+                    sh '''
+                    $SONAR_HOME/bin/sonar-scanner \
                     -Dsonar.projectKey=three-tier-app \
                     -Dsonar.sources=. \
                     -Dsonar.host.url=http://host.docker.internal:9000 \
-                    -Dsonar.login=${SONAR_AUTH_TOKEN}
-                    """
+                    -Dsonar.login=$SONAR_TOKEN
+                    '''
                 }
             }
         }
@@ -39,45 +43,48 @@ pipeline {
 
         stage('Build Frontend Image') {
             steps {
-                sh 'docker build -t 59005/frontend:latest ./frontend'
+                sh 'docker build -t abhisheksharma9877/frontend:latest ./frontend'
             }
         }
 
         stage('Build Backend Image') {
             steps {
-                sh 'docker build -t 59005/backend:latest ./backend'
+                sh 'docker build -t abhisheksharma9877/backend:latest ./backend'
             }
         }
 
         stage('Trivy Scan Frontend') {
             steps {
-                sh 'trivy image 59005/frontend:latest'
+                sh 'trivy image abhisheksharma9877/frontend:latest'
             }
         }
 
         stage('Trivy Scan Backend') {
             steps {
-                sh 'trivy image 59005/backend:latest'
+                sh 'trivy image abhisheksharma9877/backend:latest'
             }
         }
 
         stage('Docker Login') {
+            environment {
+                DOCKER_CREDS = credentials('dockerhub-creds')
+            }
+
             steps {
-                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+                sh 'echo $DOCKER_CREDS_PSW | docker login -u $DOCKER_CREDS_USR --password-stdin'
             }
         }
 
         stage('Push Frontend Image') {
             steps {
-                sh 'docker push 59005/frontend:latest'
+                sh 'docker push abhisheksharma9877/frontend:latest'
             }
         }
 
         stage('Push Backend Image') {
             steps {
-                sh 'docker push 59005/backend:latest'
+                sh 'docker push abhisheksharma9877/backend:latest'
             }
         }
-
     }
 }
