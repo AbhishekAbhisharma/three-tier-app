@@ -20,7 +20,7 @@ pipeline {
             }
 
             steps {
-                withSonarQubeEnv('sonarqube') {
+                withSonarQubeEnv('sonar-server') {
 
                     sh '''
                     $SONAR_HOME/bin/sonar-scanner \
